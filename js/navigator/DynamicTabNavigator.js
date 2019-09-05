@@ -99,7 +99,7 @@ const TABS = { //配置页面路由
         }));
     }
     render(){
-        NavigationUtil.navigation = this.props.navigation; // 里面导航器跳转到外部跳转导航器
+        // NavigationUtil.navigation = this.props.navigation; // 里面导航器跳转到外部跳转导航器
        const Tab = this._tabNavigator();
        return <Tab></Tab>
     }

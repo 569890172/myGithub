@@ -13,6 +13,8 @@ import {
   Text,
 } from 'react-native';
 import {createBottomTabNavigator, createAppContainer} from 'react-navigation';
+import {BackHandler} from 'react-native';
+import {NavigationActions} from 'react-navigation'
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons'
 import Ionicons from 'react-native-vector-icons/Ionicons'
 import Entypo from 'react-native-vector-icons/Entypo'
@@ -23,9 +25,28 @@ import FavoritePage from './FavoritePage'
 import MyPage from './MyPage'
 import NavigationUtil from '../navigator/NavigationUtil';
 import DynamicTabNavigator from '../navigator/DynamicTabNavigator';
+import {connect} from 'react-redux';
 
 
-export default class HomePage extends Component {
+class HomePage extends Component {
+    componentDidMount(){//在第一次渲染后调用，只在客户端
+        BackHandler.addEventListener('hardwareBackPress',this.onBackPress);
+    }
+    componentWillUnmount(){//组件从DOM中移除之前立刻被调用
+        BackHandler.removeEventListener('hardwareBackPress',this.onBackPress);
+    }
+    // 处理安卓物理返回键
+    onBackPress=()=>{
+        const { dispatch,nav } =this.props;
+        if(nav.routes[1].index === 0){//如果RootNavigator的MainNavigator的index为0，则处理返回事件
+            return false;
+        }
+        dispatch(NavigationActions.back());
+        return true;
+    }
+
+
+
     // _tabNavigator(){
     //     return createAppContainer(createBottomTabNavigator({
     //         PopularPage:{
@@ -104,3 +125,9 @@ const styles = StyleSheet.create({
     },
 });
 
+
+const mapStateToProps = state =>({
+    nav:state.nav
+});
+
+export default connect(mapStateToProps)(HomePage)
