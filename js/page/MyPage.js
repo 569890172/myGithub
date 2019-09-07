@@ -35,6 +35,35 @@ import actions from '../action/index';
                     this.props.onThemeChange('#096')
                 }}
             ></Button>
+            <Text onPress={()=>{
+                  NavigationUtil.goPage({
+                      navigation:this.props.navigation
+                  },"DetailPage")  
+                }}>跳转到详情页面</Text>
+                <Button
+                    title={'Fetch获取数据'}
+                    onPress={()=>{
+                        NavigationUtil.goPage({
+                            navigation:this.props.navigation
+                        },"FetchDemoPage")
+                    }}
+                ></Button>
+                <Button
+                    title={'AsynStorege  的使用'}
+                    onPress={()=>{
+                        NavigationUtil.goPage({
+                            navigation:this.props.navigation
+                        },"AsyncStoregeDemoPage")
+                    }}
+                ></Button>
+                <Button
+                    title={'离线缓存框架  的使用'}
+                    onPress={()=>{
+                        NavigationUtil.goPage({
+                            navigation:this.props.navigation
+                        },"DataStoreDemoPage")
+                    }}
+                ></Button>
            </View>
         )
     }

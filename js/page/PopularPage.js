@@ -13,8 +13,20 @@ import {
   View,
   Text,
   Button,
+  FlatList,
+  RefreshControl,
+  ActivityIndicator,
 } from 'react-native';
+import {connect} from 'react-redux'
+import actions from '../action/index';
+import PopularItem from '../common/PopularItem'
+import Toast from 'react-native-easy-toast';
+
 import NavigationUtil from '../navigator/NavigationUtil';
+
+const URL= 'https://api.github.com/search/repositories?q=';
+const QUERY_STR='&sort=stars'
+
 
 
 export default class PopularPage extends Component {
@@ -27,7 +39,7 @@ export default class PopularPage extends Component {
         this.tabNames.forEach((item,index)=>{
             tabs[`tab${index}`]={
                 // screen:PopularTab,  // 常规写法
-                screen : props => <PopularTab {...props} tabLabel={item} ></PopularTab> ,  //传递参数写法
+                screen : props => <PopularTabPage {...props} tabLabel={item} ></PopularTabPage> ,  //传递参数写法
                 navigationOptions:{
                     title : item  
                 }
@@ -37,23 +49,7 @@ export default class PopularPage extends Component {
     }
 
     render(){
-        // const TabNavigator = createAppContainer(createMaterialTopTabNavigator(
-        //     this._getTabs(),
-        //     {
-        //     PopularTab1:{
-        //         screen:PopularTab,
-        //         navigationOptions:{
-        //             title:'Tab1'
-        //         }
-        //     },
-        //     PopularTab2:{
-        //         screen:PopularTab,
-        //         navigationOptions:{
-        //             title:'Tab2'
-        //         }
-        //     },
-        //  }
-        //  ));
+
          const TabNavigator =createAppContainer( createMaterialTopTabNavigator(
             this._getTabs(),{
                 tabBarOptions:{
@@ -76,47 +72,117 @@ export default class PopularPage extends Component {
     }
 };
 
+const pageSize = 10; //设置为常量，防止被修改。
 class PopularTab extends Component{ //自定义组件
-    render(){
+    constructor(props){
+        super(props);
         const {tabLabel} =this.props;
-        return(
-            <View >
-                <Text>{tabLabel}</Text>
-                <Text onPress={()=>{
-                  NavigationUtil.goPage({
-                      navigation:this.props.navigation
-                  },"DetailPage")  
-                }}>跳转到详情页面</Text>
-                <Button
-                    title={'Fetch获取数据'}
-                    onPress={()=>{
-                        NavigationUtil.goPage({
-                            navigation:this.props.navigation
-                        },"FetchDemoPage")
-                    }}
-                ></Button>
-                <Button
-                    title={'AsynStorege  的使用'}
-                    onPress={()=>{
-                        NavigationUtil.goPage({
-                            navigation:this.props.navigation
-                        },"AsyncStoregeDemoPage")
-                    }}
-                ></Button>
-                <Button
-                    title={'离线缓存框架  的使用'}
-                    onPress={()=>{
-                        NavigationUtil.goPage({
-                            navigation:this.props.navigation
-                        },"DataStoreDemoPage")
-                    }}
-                ></Button>
+        this.storeName = tabLabel;
+    }
+    componentDidMount(){
+        this.loadData(false);
+    }
+    loadData(loadMore){
+        const {onLoadPopularData,onLoadMorePopular} = this.props;
+        const store=this._store();
+        const url = this.getFetchUrl(this.storeName);
+        if(loadMore){
+            onLoadMorePopular(this.storeName, ++store.pageIndex,pageSize,store.items,callBack=>{
+              this.refs.toast.show('没有更多了');
+            })
+        }else{
+            onLoadPopularData(this.storeName,url,pageSize)
+        }
+    }
+    /**
+     * 获取当前页面相关数据
+     */
+    _store(){
+        const {popular} = this.props;
+        let store = popular[this.storeName]; //动态获取state
+        if(!store){
+            store ={
+                item:[],
+                isLoading: false,
+                projectModes:[],//要显示的数据
+                hideLoadingMore:true, //默认隐藏加载更多
+            }
+        }
+        return store;
+    }
+    getFetchUrl(key){
+        return URL+ key + QUERY_STR;
+    }
+    renderItem(data){
+        const item =data.item;
+        return <PopularItem
+            item={item}
+            onSelect={()=>{
 
+            }}
+        ></PopularItem>
+    }
+    getIndicator(){
+        return this._store().hideLoadingMore ? null :
+            <View style={styles.indicatorContainer} >
+                <ActivityIndicator 
+                    style={styles.indicator}
+                ></ActivityIndicator>
+                <Text>加载更多</Text>
+            </View>
+    }
+    render(){
+        const {popular} = this.props;
+        let store = this._store();
+        return(
+            <View style={styles.container}>
+                <FlatList
+                    data={store.projectModes}
+                    renderItem ={data=>this.renderItem(data)}
+                    keyExtractor={item => ""+item.id}
+                    refreshControl={ //刷新加载数据
+                        <RefreshControl
+                            title={'玩命加载中...'}
+                            titleColor={'red'}
+                            colors={['red']}
+                            refreshing={store.isLoading}
+                            onRefresh={()=>this.loadData(false)}
+                            tintColor={'red'}
+                        ></RefreshControl>
+                    }
+                    ListFooterComponent={()=> this.getIndicator()}
+                    onEndReached={()=>{ //滑动到底部
+                        console.log('------onEndReached--------')
+                        setTimeout(() => { // 确保onMomentumScrollBegin 先执行
+                            if(this.canLoadMore){
+                                this.loadData(true); //加载更多
+                                this.canLoadMore=false;
+                            }
+                        }, 100);
+                        
+                    }}
+                    onEndReachedThreshold={0.5} //距离底部距离
+                    onMomentumScrollBegin={()=>{
+                        this.canLoadMore= true;
+                        console.log('------onMomentumScrollBegin--------');
+                    }}
+                ></FlatList>
+                <Toast ref={'toast'} 
+                    position={'center'}
+                ></Toast>
             </View>
         );
     }
 }
 
+const mapStateToProps = state =>({
+    popular: state.popular
+})
+const mapDispatchToProps = dispatch =>({
+    onLoadPopularData:(storeName,url,pageSize) => dispatch(actions.onLoadPopularData(storeName,url,pageSize)),
+    onLoadMorePopular:(storeName,pageIndex,pageSize,items,callBack) => dispatch(actions.onLoadMorePopular(storeName,pageIndex,pageSize,items,callBack))
+})
+const PopularTabPage = connect(mapStateToProps,mapDispatchToProps)(PopularTab)
 
 const styles = StyleSheet.create({
     container:{
@@ -141,6 +207,13 @@ const styles = StyleSheet.create({
         fontSize:13,
         marginTop:6,
         marginBottom:6,
+    },
+    indicatorContainer:{
+        alignItems:'center',
+    },
+    indicator:{
+        color:'red',
+        margin:10,
     },
 });
 

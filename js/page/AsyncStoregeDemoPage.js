@@ -13,8 +13,8 @@ import {
     Text,
     Button,
     TextInput,
-    AsyncStorage
 } from 'react-native';
+import AsyncStorage from '@react-native-community/async-storage';
 
 const KEY='save_key'
 
