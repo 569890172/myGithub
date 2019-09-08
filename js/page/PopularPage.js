@@ -8,6 +8,7 @@
 
 import React, {Component} from 'react';
 import {createMaterialTopTabNavigator, createAppContainer} from 'react-navigation'
+import {DeviceInfo} from 'react-native'
 import {
   StyleSheet,
   View,
@@ -21,11 +22,13 @@ import {connect} from 'react-redux'
 import actions from '../action/index';
 import PopularItem from '../common/PopularItem'
 import Toast from 'react-native-easy-toast';
+import NavigationBar from '../common/NavigationBar';
 
 import NavigationUtil from '../navigator/NavigationUtil';
 
 const URL= 'https://api.github.com/search/repositories?q=';
 const QUERY_STR='&sort=stars'
+const THEME_COLOR='#678'
 
 
 
@@ -49,6 +52,15 @@ export default class PopularPage extends Component {
     }
 
     render(){
+        let statusBar = {
+            backgroundColor: THEME_COLOR,
+            barStyle: 'default',
+        };
+        let navigationBar = <NavigationBar
+            title={'最热'}
+            statusBar={statusBar}
+           style={{backgroundColor:THEME_COLOR}}
+        />;
 
          const TabNavigator =createAppContainer( createMaterialTopTabNavigator(
             this._getTabs(),{
@@ -58,6 +70,7 @@ export default class PopularPage extends Component {
                     scrollEnabled:true, // 是否支持选项卡 滚动,默认 false
                     style:{
                         backgroundColor:'#678', // TabBar 背景颜色
+                        height:30,
                     },
                     indicatorStyle:styles.indicatorStyle, //标签指示器样式
                     labelStyle:styles.lableStyle, //文字样式
@@ -65,7 +78,8 @@ export default class PopularPage extends Component {
             }
         ));
         return(
-            <View style={{flex:1,marginTop:44}} >
+            <View style={{flex:1,marginTop:DeviceInfo.isIPhoneX_deprecated?30:0}} >
+                {navigationBar}
                 <TabNavigator></TabNavigator>
             </View>
         )
@@ -197,7 +211,8 @@ const styles = StyleSheet.create({
         margin:10,
     },
     tabStyle:{
-        minWidth:30
+        // minWidth:30
+        padding:0,
     },
     indicatorStyle:{
         height:2,
@@ -205,8 +220,7 @@ const styles = StyleSheet.create({
     },
     lableStyle:{
         fontSize:13,
-        marginTop:6,
-        marginBottom:6,
+        margin:0,
     },
     indicatorContainer:{
         alignItems:'center',

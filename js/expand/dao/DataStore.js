@@ -1,5 +1,8 @@
 import AsyncStorage from '@react-native-community/async-storage'
 
+import Trending from 'GitHubTrending'
+
+export const FLAG_STORAGE ={flag_popular:'popular',flag_trending:'trending'}
 
 export default class DataStore{
 
@@ -7,20 +10,20 @@ export default class DataStore{
      * 
      * @param {*} url 
      */
-    fetchData(url){
+    fetchData(url,flag){
         return new Promise((resolve,reject)=>{
             this.fetchLocalData(url).then((wrapData)=>{ //本地读取
                 if(wrapData && DataStore.checkTimestampValid(wrapData.timestamp)){
                     resolve(wrapData);
                 }else{
-                    this.fetchNetData(url).then((data)=>{ //网路读取
+                    this.fetchNetData(url,flag).then((data)=>{ //网路读取
                         resolve(this._warpData(data));
                     }).catch((error)=>{
                         reject(error);
                     })
                 }
             }).catch((error)=>{
-                this.fetchNetData(url).then((data)=>{ // 网络读取
+                this.fetchNetData(url,flag).then((data)=>{ // 网络读取
                     resolve(this._warpData(data));
                 }).catch((error)=>{
                     reject(error);
@@ -68,23 +71,37 @@ export default class DataStore{
      * 
      * @param {*} url 
      */
-    fetchNetData(url){
-        return new Promise((resolve,reject)=>{
-            fetch(url)
-            .then((response) => {
-                if(response.ok){
-                    return response.json();
-                }
-                throw new Error('Net response was not ok')
-            })
-            .then((responseData)=>{
-                this.saveData(url,responseData)
-                resolve(responseData);
-            })
-            .catch((error)=>{
-                reject(error)
-            })
-        });
+    fetchNetData(url, flag) {
+        return new Promise((resolve, reject) => {
+            if (flag !== FLAG_STORAGE.flag_trending) {
+                fetch(url)
+                    .then((response) => {
+                        if (response.ok) {
+                            return response.json();
+                        }
+                        throw new Error('Network response was not ok.');
+                    })
+                    .then((responseData) => {
+                        this.saveData(url, responseData)
+                        resolve(responseData);
+                    })
+                    .catch((error) => {
+                        reject(error);
+                    })
+            } else {
+                new Trending().fetchTrending(url)
+                    .then(items => {
+                        if (!items) {
+                            throw new Error('responseData is null');
+                        }
+                        this.saveData(url, items);
+                        resolve(items);
+                    })
+                    .catch(error => {
+                        reject(error);
+                    })
+            }
+        })
     }
 
     /**
@@ -98,7 +115,7 @@ export default class DataStore{
         if(currentData.getMonth() !== targetDate.getMonth()) return false;
         if(currentData.getDate() !== targetDate.getDate()) return false;
         if(currentData.getHours() - targetDate.getHours() > 4) return false;
-
+        
         return true;
     }
 

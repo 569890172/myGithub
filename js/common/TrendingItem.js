@@ -1,25 +1,12 @@
 import React, { Component } from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import FontAwesome from 'react-native-vector-icons/FontAwesome'
-import commonUtil from './commonUtil'
+import HtmlView from 'react-native-htmlview'
 
-export default class PopularItem extends Component {
-
-    imgIsEmpty(obj) {
-        if (!commonUtil.isEmpty(obj)) {
-            return (
-                <Image style={{ height: 22, width: 22 }}
-                    source={{ url: obj }}
-                ></Image>
-            )
-        } else {
-            return null;
-        }
-    }
-
+export default class TrendingItem extends Component {
     render() {
         const { item } = this.props;
-        if (!item || !item.owner) {
+        if (!item ) {
             return null;
         }
         let favoriteButton = <TouchableOpacity
@@ -35,28 +22,42 @@ export default class PopularItem extends Component {
                 style={{ color: 'red' }}
             ></FontAwesome>
         </TouchableOpacity>
+        let description= '<p>'+item.description +'</p>'
         return (<TouchableOpacity
             onPress={this.props.onSelect}
         >
             <View style={styles.cell_container} >
                 <Text style={styles.title} >
-                    {item.full_name}
+                    {item.fullName}
                 </Text>
+                <HtmlView
+                    value={description}
+                    onLinkPress={()=>{
+
+                    }}
+                    stylesheet={{
+                        p: styles.description,
+                        a: styles.description,
+                    }}
+                ></HtmlView>
                 <Text style={styles.description} >
-                    {item.description}
+                    {item.meta}
                 </Text>
                 <View style={styles.row}>
                     <View style={styles.row} >
-                        <Text>Author:</Text>
-                        {
-                            this.imgIsEmpty(item.owner.avatar_url)
-                        }
+                        <Text>Built by:</Text>
+                        {item.contributors.map((result,i,arr)=>{
+                            return <Image style={{height:22,width:22,margin:2}}
+                            key={i}
+                            source={{uri:arr[i]}}
+                            ></Image>
+                        })}
                     </View>
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between' }} >
+                    {/* <View style={{ flexDirection: 'row', justifyContent: 'space-between' }} >
                         <Text>Start:</Text>
-                        <Text>{item.stargazers_count}</Text>
+                        <Text>{item.starCount}</Text>
                     </View>
-                    {favoriteButton}
+                    {favoriteButton} */}
                 </View>
             </View>
         </TouchableOpacity>
