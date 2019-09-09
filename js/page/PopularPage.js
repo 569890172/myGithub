@@ -128,11 +128,14 @@ class PopularTab extends Component{ //自定义组件
         return URL+ key + QUERY_STR;
     }
     renderItem(data){
-        const item =data.item;
+        const item = data.item;
         return <PopularItem
             item={item}
+            projectModes={item}
             onSelect={()=>{
-
+                NavigationUtil.goPage({
+                    projectModes:item
+                },'DetailPage')
             }}
         ></PopularItem>
     }

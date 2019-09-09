@@ -26,14 +26,21 @@ import MyPage from './MyPage'
 import NavigationUtil from '../navigator/NavigationUtil';
 import DynamicTabNavigator from '../navigator/DynamicTabNavigator';
 import {connect} from 'react-redux';
+import BackPressComponent from '../common/BackPressComponent'
 
 
 class HomePage extends Component {
+    constructor(props){
+        super(props);
+        this.backPress= new BackPressComponent({backPress:this.onBackPress()});
+    }
+
+
     componentDidMount(){//在第一次渲染后调用，只在客户端
-        BackHandler.addEventListener('hardwareBackPress',this.onBackPress);
+        this.backPress.componentDidMount();
     }
     componentWillUnmount(){//组件从DOM中移除之前立刻被调用
-        BackHandler.removeEventListener('hardwareBackPress',this.onBackPress);
+        this.backPress.componentWillUnmount();
     }
     // 处理安卓物理返回键
     onBackPress=()=>{

@@ -87,7 +87,7 @@ const styles = StyleSheet.create({
         bottom: 0
     },
     title: {
-        fontSize: 20,
+        fontSize: 18,
         color: 'white',
     },
     statusBar: {
